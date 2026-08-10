@@ -31,7 +31,7 @@
         textarea {
             flex: 1; min-width: 300px; height: 70px; background: #111; border: 1px dashed #1dcf60;
             color: #fff; border-radius: 6px; padding: 10px; font-size: 14px;
-            resize: none; outline: none; font-family: monospace; direction: ltr; white-space: pre-wrap;
+            resize: none; outline: none; font-family: monospace; direction: ltr; white-space: pre;
         }
         textarea::placeholder { color: #88c79c; direction: rtl; }
         
@@ -52,9 +52,7 @@
         }
         button.clear-btn:hover { background: #cc0000; }
 
-        .main-content {
-            display: flex; flex: 1; overflow: hidden;
-        }
+        .main-content { display: flex; flex: 1; overflow: hidden; }
         
         .sidebar {
             width: 320px; background: #151515; border-left: 1px solid #333;
@@ -94,7 +92,7 @@
             background-size: 55%; background-position: center; background-repeat: no-repeat;
         }
         .jw-flag-fullscreen .jw-icon-fullscreen {
-            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCAzdjNhMiAyIDAgMCAxLTIgMkgzbTE4IDBoLTNhMiAyIDAgMCAxLTUtMlYzbTAgMTh2LTNhMiAyIDAgMCAxIDItMmgzTTMgMTZoM2EyIDIgMCAwIDEgMiAydjMiLz48L3N2Zz4=');
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOCAzdjNhMiAyIDAgMCAxLTIgMkgzbTE4IDBoLTNhMiAyIDAgMCAxLTUtMlYzbTAgMTh2LTNhMiAyIDAgMCAxIDItMmgzTTMgMTZoM2EyIDIgMCAw IDEgMiAydjMiLz48L3N2Zz4=');
         }
         .jw-icon-playlist, .jw-icon-next, .jw-related-btn { display: none !important; }
 
@@ -107,9 +105,9 @@
 <body>
 
     <div class="top-panel">
-        <h2>أداة استخراج وتشغيل قنوات M3U8 الاحترافية</h2>
+        <h2>أداة استخراج وتشغيل قنوات M3U8</h2>
         <div class="input-group">
-            <textarea id="m3uInput" placeholder="الصق الروابط هنا بأي تنسيق وسيتم الاستخراج..."></textarea>
+            <textarea id="m3uInput" placeholder="الصق النص هنا مباشرة..."></textarea>
             
             <div class="controls">
                 <select id="playerType">
@@ -118,8 +116,8 @@
                 </select>
                 
                 <div class="buttons-row">
-                    <button class="extract-btn" onclick="parseM3U()">استخراج ⚡</button>
-                    <button class="clear-btn" onclick="clearAll()">حذف الكل 🗑️</button>
+                    <button class="extract-btn" onclick="parseText()">استخراج ⚡</button>
+                    <button class="clear-btn" onclick="clearAllData()">حذف الكل 🗑️</button>
                 </div>
             </div>
         </div>
@@ -128,7 +126,7 @@
     <div class="main-content">
         <div class="player-wrapper">
             <div id="video-container">
-                <h3 style="color: #444; margin-top: 20%; text-align: center;">اختر قناة للتشغيل</h3>
+                <h3 style="color: #444; text-align: center;">اختر قناة للتشغيل</h3>
             </div>
         </div>
         
@@ -145,224 +143,168 @@
     </div>
 
     <script>
-        let extractedChannels = [];
-        let currentHls = null;
-        let currentPlyr = null;
-        let currentJwPlayer = null;
+        var channels = [];
+        var hlsInstance = null;
+        var plyrInstance = null;
+        var jwInstance = null;
 
-        function clearAll() {
-            document.getElementById('m3uInput').value = '';
-            document.getElementById('searchInput').value = '';
-            
-            extractedChannels = [];
-            document.getElementById("channelList").innerHTML = '<div style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">تم حذف القنوات</div>';
-            
-            destroyPlayers();
-            document.getElementById('video-container').innerHTML = '<h3 style="color: #444; margin-top: 20%; text-align: center;">تم تفريغ المشغل</h3>';
-        }
-
-        function destroyPlayers() {
-            if (currentHls) { currentHls.destroy(); currentHls = null; }
-            if (currentPlyr) { currentPlyr.destroy(); currentPlyr = null; }
-            if (currentJwPlayer) { currentJwPlayer.remove(); currentJwPlayer = null; }
+        // دالة تنظيف المشغلات
+        function resetPlayer() {
+            if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+            if (plyrInstance) { plyrInstance.destroy(); plyrInstance = null; }
+            if (jwInstance) { jwInstance.remove(); jwInstance = null; }
             document.getElementById('video-container').innerHTML = '';
         }
 
-        // محرك الاستخراج المحسن جداً
-        function parseM3U() {
-            try {
-                let rawText = document.getElementById('m3uInput').value.trim();
-                if (!rawText) {
-                    alert("يرجى لصق الروابط أولاً!");
-                    return;
-                }
-
-                extractedChannels = [];
-                // استبدال أي مسافات عريضة متتالية (Tabs) بمسافة واحدة لتسهيل القراءة
-                rawText = rawText.replace(/\t+/g, ' '); 
-                const lines = rawText.split(/\r?\n/);
-                let tempName = "";
-
-                for (let i = 0; i < lines.length; i++) {
-                    let line = lines[i].trim();
-                    if (!line) continue;
-
-                    if (line.toUpperCase().startsWith('#EXTINF')) {
-                        const parts = line.split(',');
-                        tempName = parts.length > 1 ? parts.slice(1).join(',').trim() : line.replace(/#EXTINF[:-0-9\s]*/i, '').trim();
-                        continue;
-                    }
-
-                    // اصطياد الرابط (حتى لو كان ملزوق فيه كلام)
-                    const urlMatch = line.match(/(https?:\/\/[^\s]+)/i);
-
-                    if (urlMatch) {
-                        let url = urlMatch[1];
-                        let nameInline = line.replace(url, '').trim();
-                        nameInline = nameInline.replace(/^[-:;|,>]+|[-:;,|<]+$/g, '').trim();
-
-                        let finalName = "قناة " + (extractedChannels.length + 1);
-
-                        if (nameInline) {
-                            finalName = nameInline;
-                        } else if (tempName) {
-                            finalName = tempName;
-                        }
-
-                        extractedChannels.push({ name: finalName, url: url });
-                        tempName = ""; 
-                    } else {
-                        if (!line.startsWith('#')) {
-                            tempName = line;
-                        }
-                    }
-                }
-
-                // لو مفيش روابط واضحة بالسطر، بنجيب أي رابط في النص كله
-                if (extractedChannels.length === 0) {
-                    const fallbackUrls = rawText.match(/https?:\/\/[^\s]+/gi);
-                    if (fallbackUrls) {
-                        fallbackUrls.forEach((u, idx) => extractedChannels.push({ name: "قناة " + (idx + 1), url: u }));
-                    }
-                }
-
-                if (extractedChannels.length === 0) {
-                    alert("لم يتم العثور على روابط صحيحة (تبدأ بـ http أو https)!");
-                    return;
-                }
-
-                document.getElementById('searchInput').value = '';
-                renderChannels('');
-                playChannel(0);
-
-            } catch (err) {
-                alert("حدث خطأ غير متوقع أثناء الفحص.");
-                console.error(err);
-            }
+        // دالة حذف الكل المباشرة
+        function clearAllData() {
+            document.getElementById('m3uInput').value = '';
+            document.getElementById('searchInput').value = '';
+            channels = [];
+            document.getElementById("channelList").innerHTML = '<div style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">تم حذف القنوات</div>';
+            resetPlayer();
+            document.getElementById('video-container').innerHTML = '<h3 style="color: #444; text-align: center;">اختر قناة للتشغيل</h3>';
         }
 
-        function renderChannels(filterText) {
-            const listContainer = document.getElementById("channelList");
-            listContainer.innerHTML = "";
+        // دالة استخراج مبسطة للغاية وبدون أخطاء
+        function parseText() {
+            var input = document.getElementById('m3uInput').value;
+            if (!input.trim()) {
+                alert("يرجى لصق الروابط أولاً!");
+                return;
+            }
 
-            let found = false;
-            for (let i = 0; i < extractedChannels.length; i++) {
-                const channel = extractedChannels[i];
-                if (channel.name.toLowerCase().includes(filterText.toLowerCase())) {
+            channels = [];
+            var lines = input.split('\n');
+            var lastExtName = "";
+
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (!line) continue;
+
+                // دعم M3U القياسي
+                if (line.toUpperCase().indexOf('#EXTINF') === 0) {
+                    var comma = line.lastIndexOf(',');
+                    if (comma !== -1) {
+                        lastExtName = line.substring(comma + 1).trim();
+                    }
+                    continue;
+                }
+
+                // كشف أي رابط بيبدأ بـ http
+                var httpPos = line.indexOf('http://');
+                if (httpPos === -1) httpPos = line.indexOf('https://');
+
+                if (httpPos !== -1) {
+                    var url = line.substring(httpPos).trim();
+                    var name = line.substring(0, httpPos).trim();
+
+                    // تنظيف الاسم
+                    name = name.replace(/^[-:;|,>]+|[-:;,|<]+$/g, '').trim();
+
+                    if (!name) {
+                        if (lastExtName) name = lastExtName;
+                        else name = "قناة " + (channels.length + 1);
+                    }
+
+                    channels.push({ name: name, url: url });
+                    lastExtName = "";
+                } else if (line.indexOf('#') !== 0) {
+                    lastExtName = line;
+                }
+            }
+
+            if (channels.length === 0) {
+                alert("لم يتم العثور على أي رابط يبدأ بـ http أو https");
+                return;
+            }
+
+            document.getElementById('searchInput').value = '';
+            renderList("");
+            playChannel(0);
+        }
+
+        // عرض القنوات
+        function renderList(filter) {
+            var list = document.getElementById("channelList");
+            list.innerHTML = "";
+            var found = false;
+
+            for (var i = 0; i < channels.length; i++) {
+                var ch = channels[i];
+                if (ch.name.toLowerCase().indexOf(filter.toLowerCase()) !== -1) {
                     found = true;
-                    const btn = document.createElement("div");
+                    var btn = document.createElement("div");
                     btn.className = "channel-btn";
-                    btn.id = "btn-" + i;
+                    btn.id = "ch-btn-" + i;
+                    btn.innerHTML = '<span>' + ch.name + '</span> <span style="font-size: 10px; color: #88c79c;">CH</span>';
                     
-                    btn.innerHTML = `<span>${channel.name}</span> <span style="font-size: 10px; color: #88c79c;">CH</span>`;
-                    
-                    btn.onclick = () => playChannel(i);
-                    listContainer.appendChild(btn);
+                    (function(idx) {
+                        btn.onclick = function() { playChannel(idx); };
+                    })(i);
+
+                    list.appendChild(btn);
                 }
             }
 
             if (!found) {
-                listContainer.innerHTML = '<div style="color: #666; text-align: center; margin-top: 20px;">لا توجد نتائج</div>';
+                list.innerHTML = '<div style="color: #666; text-align: center; margin-top: 20px;">لا توجد نتائج</div>';
             }
         }
 
         function filterChannels() {
-            const text = document.getElementById("searchInput").value;
-            renderChannels(text);
+            var query = document.getElementById("searchInput").value;
+            renderList(query);
         }
 
+        // تشغيل القناة
         function playChannel(index) {
-            try {
-                const channel = extractedChannels[index];
-                const playerType = document.getElementById('playerType').value;
-                const container = document.getElementById('video-container');
+            var ch = channels[index];
+            var pType = document.getElementById('playerType').value;
+            var container = document.getElementById('video-container');
 
-                const allBtns = document.querySelectorAll(".channel-btn");
-                allBtns.forEach(b => b.classList.remove("active"));
-                const activeBtn = document.getElementById("btn-" + index);
-                if(activeBtn) activeBtn.classList.add("active");
+            var btns = document.querySelectorAll(".channel-btn");
+            for (var k = 0; k < btns.length; k++) { btns[k].classList.remove("active"); }
+            var curBtn = document.getElementById("ch-btn-" + index);
+            if (curBtn) curBtn.classList.add("active");
 
-                destroyPlayers();
+            resetPlayer();
 
-                if (playerType === 'jw') {
-                    container.innerHTML = '<div id="jw-player"></div>';
-                    
-                    let setupConfig = {
-                        file: channel.url,
-                        width: "100%",
-                        height: "100%",
-                        autostart: true,
-                        stretching: "uniform",
-                        playbackRateControls: true, 
-                        liveTimeout: 0 
-                    };
+            if (pType === 'jw') {
+                container.innerHTML = '<div id="jw-player"></div>';
+                jwInstance = jwplayer("jw-player").setup({
+                    file: ch.url,
+                    width: "100%", height: "100%",
+                    autostart: true, stretching: "uniform",
+                    playbackRateControls: true, liveTimeout: 0
+                });
 
-                    currentJwPlayer = jwplayer("jw-player").setup(setupConfig);
+                jwInstance.on('ready', function() {
+                    var isStretched = false;
+                    var diagonalCutArrow = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTQgMTBsNy03bS02IDBoNnY2bS0xMSA1bC03IDdtNiAwSDN2LTYiLz48L3N2Zz4=";
+                    jwInstance.addButton(diagonalCutArrow, "توسيع/تضييق", function() {
+                        if (!isStretched) { jwInstance.setConfig({ stretching: "exactfit" }); isStretched = true; }
+                        else { jwInstance.setConfig({ stretching: "uniform" }); isStretched = false; }
+                    }, "stretch-button");
+                });
 
-                    currentJwPlayer.on('ready', function() {
-                        let isStretched = false;
-                        const diagonalCutArrow = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTQgMTBsNy03bS02IDBoNnY2bS0xMSA1bC03IDdtNiAwSDN2LTYiLz48L3N2Zz4=";
+            } else if (pType === 'plyr') {
+                container.innerHTML = '<video id="plyr-v" controls playsinline style="width:100%;height:100%;"></video>';
+                var v = document.getElementById('plyr-v');
 
-                        currentJwPlayer.addButton(
-                            diagonalCutArrow, 
-                            "توسيع/تضييق الصورة", 
-                            function() {
-                                if (!isStretched) {
-                                    currentJwPlayer.setConfig({ stretching: "exactfit" }); 
-                                    isStretched = true;
-                                } else {
-                                    currentJwPlayer.setConfig({ stretching: "uniform" });
-                                    isStretched = false;
-                                }
-                            },
-                            "stretch-button"
-                        );
+                if (Hls.isSupported()) {
+                    hlsInstance = new Hls();
+                    hlsInstance.loadSource(ch.url);
+                    hlsInstance.attachMedia(v);
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                        plyrInstance = new Plyr(v, { controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'fullscreen'] });
+                        v.play();
                     });
-
-                } else if (playerType === 'plyr') {
-                    container.innerHTML = '<video id="plyr-video" controls crossorigin playsinline style="width: 100%; height: 100%; background: #000;"></video>';
-                    const video = document.getElementById('plyr-video');
-
-                    const defaultOptions = {
-                        controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'pip', 'fullscreen'],
-                        settings: ['quality', 'speed']
-                    };
-
-                    if (Hls.isSupported()) {
-                        currentHls = new Hls();
-                        currentHls.loadSource(channel.url);
-                        currentHls.attachMedia(video);
-                        currentHls.on(Hls.Events.MANIFEST_PARSED, function (event, data) {
-                            
-                            const availableQualities = currentHls.levels.map((l) => l.height);
-                            defaultOptions.quality = {
-                                default: availableQualities[0],
-                                options: availableQualities,
-                                forced: true,
-                                onChange: (e) => updateQuality(e),
-                            };
-
-                            currentPlyr = new Plyr(video, defaultOptions);
-                            video.play();
-                        });
-
-                        function updateQuality(newQuality) {
-                            currentHls.levels.forEach((level, levelIndex) => {
-                                if (level.height === newQuality) {
-                                    currentHls.currentLevel = levelIndex;
-                                }
-                            });
-                        }
-                    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                        video.src = channel.url;
-                        currentPlyr = new Plyr(video, defaultOptions);
-                        video.addEventListener('loadedmetadata', function() {
-                            video.play();
-                        });
-                    }
+                } else if (v.canPlayType('application/vnd.apple.mpegurl')) {
+                    v.src = ch.url;
+                    plyrInstance = new Plyr(v);
+                    v.play();
                 }
-            } catch (err) {
-                console.error("خطأ في التشغيل:", err);
             }
         }
     </script>
