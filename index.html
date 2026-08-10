@@ -28,7 +28,7 @@
         
         .input-group { display: flex; gap: 10px; }
         textarea {
-            flex: 1; height: 60px; background: #111; border: 1px dashed #1dcf60;
+            flex: 1; height: 70px; background: #111; border: 1px dashed #1dcf60;
             color: #fff; border-radius: 6px; padding: 10px; font-size: 14px;
             resize: none; outline: none; font-family: monospace; direction: ltr;
         }
@@ -80,6 +80,8 @@
         }
         #video-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
         
+        video.hls-player { width: 100%; height: 100%; background: #000; outline: none; }
+
         /* تعديلات JW Player البصرية */
         .jw-icon-fullscreen svg { display: none !important; }
         .jw-icon-fullscreen {
@@ -103,7 +105,7 @@
     <div class="top-panel">
         <h2>أداة استخراج وتشغيل قنوات M3U8</h2>
         <div class="input-group">
-            <textarea id="m3uInput" placeholder="الصق الروابط هنا بأي صيغة أو مسافات عشوائيةوسيتم الاستخراج..."></textarea>
+            <textarea id="m3uInput" placeholder="الصق الروابط هنا بأي صيغة أو مسافات عشوائية وسيتم الاستخراج..."></textarea>
             <div class="controls">
                 <select id="playerType">
                     <option value="jw">JW Player (المفضل للـ M3U8)</option>
@@ -138,68 +140,68 @@
         let currentHls = null;
         let currentJwPlayer = null;
 
-        // دالة الاستخراج (تم تنظيفها من أي أخطاء برمجية سابقة)
+        // دالة الاستخراج الجديدة كلياً (محمية ومضادة للأخطاء)
         function parseM3U() {
-            const rawText = document.getElementById('m3uInput').value;
-            if (!rawText.trim()) {
-                alert("يرجى لصق الروابط أولاً!");
-                return;
-            }
-
-            extractedChannels = [];
-            const lines = rawText.split(/\r?\n|\r/);
-            let tempName = "قناة غير معروفة";
-
-            for (let i = 0; i < lines.length; i++) {
-                let line = lines[i].trim();
-                if (!line) continue;
-
-                // لو السطر M3U قياسي
-                if (line.toUpperCase().startsWith('#EXTINF')) {
-                    const parts = line.split(',');
-                    tempName = parts.length > 1 ? parts.slice(1).join(',').trim() : line.replace(/#EXTINF[:-0-9\s]*/i, '').trim();
-                    continue;
+            try {
+                const rawText = document.getElementById('m3uInput').value.trim();
+                if (!rawText) {
+                    alert("يرجى لصق الروابط أولاً!");
+                    return;
                 }
 
-                // سحب الرابط
-                const urlRegex = /(https?:\/\/[^\s<>"]+)/i;
-                let urlMatch = line.match(urlRegex);
+                extractedChannels = [];
+                const lines = rawText.split(/\r?\n/);
+                let tempName = "";
 
-                if (urlMatch) {
-                    let url = urlMatch[1];
-                    let nameInline = line.replace(url, '').trim();
-                    
-                    // تنظيف الفواصل من الاسم
-                    nameInline = nameInline.replace(/^[-:;|,]+|[-:;,|]+$/g, '').trim();
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    if (!line) continue;
 
-                    let channelName = "قناة " + (extractedChannels.length + 1);
+                    // اصطياد الرابط
+                    const urlMatch = line.match(/(https?:\/\/[^\s]+)/i);
 
-                    if (nameInline && nameInline.length > 0) {
-                        channelName = nameInline;
-                    } else if (tempName && tempName !== "قناة غير معروفة") {
-                        channelName = tempName;
-                    } else if (i > 0) {
-                        let prevLine = lines[i - 1].trim();
-                        if (prevLine && !prevLine.match(urlRegex) && !prevLine.startsWith('#')) {
-                            channelName = prevLine;
+                    if (urlMatch) {
+                        let url = urlMatch[1];
+                        
+                        // عزل الرابط لاستخراج الاسم
+                        let nameInline = line.replace(url, '').trim();
+                        // تنظيف الرموز
+                        nameInline = nameInline.replace(/^[-:;|,>]+|[-:;,|<]+$/g, '').trim();
+
+                        let finalName = "قناة " + (extractedChannels.length + 1);
+
+                        if (nameInline) {
+                            finalName = nameInline;
+                        } else if (tempName) {
+                            finalName = tempName;
+                        }
+
+                        extractedChannels.push({ name: finalName, url: url });
+                        tempName = ""; // تصفير الاسم
+                    } else {
+                        // لو السطر مفيهوش رابط، نجهزه كاسم للقناة اللي هتيجي بعده
+                        if (line.toUpperCase().startsWith('#EXTINF')) {
+                            let parts = line.split(',');
+                            tempName = parts.length > 1 ? parts.slice(1).join(',').trim() : "قناة غير معروفة";
+                        } else if (!line.startsWith('#')) {
+                            tempName = line;
                         }
                     }
-
-                    extractedChannels.push({ name: channelName, url: url });
-                    tempName = "قناة غير معروفة"; 
-                } else if (!line.startsWith('#')) {
-                    tempName = line;
                 }
-            }
 
-            if (extractedChannels.length === 0) {
-                alert("لم يتم العثور على روابط! يرجى التأكد من وجود روابط تبدأ بـ http أو https");
-                return;
-            }
+                if (extractedChannels.length === 0) {
+                    alert("لم يتم العثور على أي روابط بتبدأ بـ http أو https!");
+                    return;
+                }
 
-            document.getElementById('searchInput').value = '';
-            renderChannels('');
-            playChannel(0); // التشغيل الفوري
+                document.getElementById('searchInput').value = '';
+                renderChannels('');
+                playChannel(0);
+
+            } catch (err) {
+                alert("حدث خطأ أثناء الفحص: " + err.message);
+                console.error(err);
+            }
         }
 
         // عرض القنوات
@@ -235,76 +237,80 @@
 
         // تشغيل القناة
         function playChannel(index) {
-            const channel = extractedChannels[index];
-            const playerType = document.getElementById('playerType').value;
-            const container = document.getElementById('video-container');
+            try {
+                const channel = extractedChannels[index];
+                const playerType = document.getElementById('playerType').value;
+                const container = document.getElementById('video-container');
 
-            // تظليل القناة الفعالة
-            const allBtns = document.querySelectorAll(".channel-btn");
-            allBtns.forEach(b => b.classList.remove("active"));
-            const activeBtn = document.getElementById("btn-" + index);
-            if(activeBtn) activeBtn.classList.add("active");
+                // تظليل القناة الفعالة
+                const allBtns = document.querySelectorAll(".channel-btn");
+                allBtns.forEach(b => b.classList.remove("active"));
+                const activeBtn = document.getElementById("btn-" + index);
+                if(activeBtn) activeBtn.classList.add("active");
 
-            // تنظيف البلاير
-            container.innerHTML = '';
-            if (currentHls) {
-                currentHls.destroy();
-                currentHls = null;
-            }
-
-            if (playerType === 'jw') {
-                container.innerHTML = '<div id="jw-player"></div>';
-                
-                currentJwPlayer = jwplayer("jw-player").setup({
-                    file: channel.url,
-                    type: "hls", 
-                    width: "100%",
-                    height: "100%",
-                    autostart: true,
-                    stretching: "uniform"
-                });
-
-                currentJwPlayer.on('ready', function() {
-                    let isStretched = false;
-                    const diagonalCutArrow = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTQgMTBsNy03bS02IDBoNnY2bS0xMSA1bC03IDdtNiAwSDN2LTYiLz48L3N2Zz4=";
-
-                    currentJwPlayer.addButton(
-                        diagonalCutArrow, 
-                        "توسيع/تضييق الصورة", 
-                        function() {
-                            if (!isStretched) {
-                                currentJwPlayer.setConfig({ stretching: "exactfit" }); 
-                                isStretched = true;
-                            } else {
-                                currentJwPlayer.setConfig({ stretching: "uniform" });
-                                isStretched = false;
-                            }
-                        },
-                        "stretch-button"
-                    );
-                });
-
-            } else if (playerType === 'hls') {
-                container.innerHTML = '<video id="hls-video" style="width: 100%; height: 100%; background: #000; outline: none;" controls autoplay></video>';
-                const video = document.getElementById('hls-video');
-
-                if (Hls.isSupported()) {
-                    currentHls = new Hls({
-                        maxMaxBufferLength: 30, 
-                        liveSyncDurationCount: 3
-                    });
-                    currentHls.loadSource(channel.url);
-                    currentHls.attachMedia(video);
-                    currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        video.play();
-                    });
-                } 
-                else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = channel.url;
-                    video.addEventListener('loadedmetadata', function() {
-                        video.play();
-                    });
+                // تنظيف البلاير
+                container.innerHTML = '';
+                if (currentHls) {
+                    currentHls.destroy();
+                    currentHls = null;
                 }
+
+                if (playerType === 'jw') {
+                    container.innerHTML = '<div id="jw-player"></div>';
+                    
+                    currentJwPlayer = jwplayer("jw-player").setup({
+                        file: channel.url,
+                        type: "hls", 
+                        width: "100%",
+                        height: "100%",
+                        autostart: true,
+                        stretching: "uniform"
+                    });
+
+                    currentJwPlayer.on('ready', function() {
+                        let isStretched = false;
+                        const diagonalCutArrow = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZmZmIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTQgMTBsNy03bS02IDBoNnY2bS0xMSA1bC03IDdtNiAwSDN2LTYiLz48L3N2Zz4=";
+
+                        currentJwPlayer.addButton(
+                            diagonalCutArrow, 
+                            "توسيع/تضييق الصورة", 
+                            function() {
+                                if (!isStretched) {
+                                    currentJwPlayer.setConfig({ stretching: "exactfit" }); 
+                                    isStretched = true;
+                                } else {
+                                    currentJwPlayer.setConfig({ stretching: "uniform" });
+                                    isStretched = false;
+                                }
+                            },
+                            "stretch-button"
+                        );
+                    });
+
+                } else if (playerType === 'hls') {
+                    container.innerHTML = '<video id="hls-video" class="hls-player" controls autoplay></video>';
+                    const video = document.getElementById('hls-video');
+
+                    if (Hls.isSupported()) {
+                        currentHls = new Hls({
+                            maxMaxBufferLength: 30, 
+                            liveSyncDurationCount: 3
+                        });
+                        currentHls.loadSource(channel.url);
+                        currentHls.attachMedia(video);
+                        currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
+                            video.play();
+                        });
+                    } 
+                    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = channel.url;
+                        video.addEventListener('loadedmetadata', function() {
+                            video.play();
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error("خطأ في التشغيل:", err);
             }
         }
     </script>
