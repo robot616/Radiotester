@@ -112,7 +112,7 @@
     <div class="top-panel">
         <h2>أداة استخراج وتشغيل قنوات M3U8</h2>
         <div class="input-group">
-            <textarea id="m3uInput" placeholder="الصق محتوى ملف الـ M3U أو قائمة الروابط هنا..."></textarea>
+            <textarea id="m3uInput" placeholder="الصق محتوى ملف الـ M3U أو قائمة الروابط بأي صيغة هنا..."></textarea>
             <div class="controls">
                 <select id="playerType">
                     <option value="jw">JW Player (المفضل)</option>
@@ -147,42 +147,67 @@
         let currentHls = null;
         let currentJwPlayer = null;
 
-        // دالة تحليل واستخراج الـ M3U
+        // دالة تحليل واستخراج الروابط بذكاء
         function parseM3U() {
             const rawText = document.getElementById('m3uInput').value.trim();
             if (!rawText) {
-                alert("يرجى لصق الروابط أو ملف الـ M3U أولاً!");
+                alert("يرجى لصق الروابط أو الملف أولاً!");
                 return;
             }
 
             extractedChannels = [];
             const lines = rawText.split('\n');
-            let currentChannelName = "قناة غير معروفة";
+            let pendingName = "قناة غير معروفة";
 
             for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
+                let line = lines[i].trim();
                 if (line === '') continue;
 
-                // لو السطر بيبدأ بـ #EXTINF، هنسحب منه اسم القناة (غالباً بيكون بعد آخر فاصلة)
-                if (line.startsWith('#EXTINF')) {
+                // لو السطر بصيغة M3U القياسية
+                if (line.toUpperCase().startsWith('#EXTINF')) {
                     const commaIndex = line.lastIndexOf(',');
                     if (commaIndex !== -1) {
-                        currentChannelName = line.substring(commaIndex + 1).trim();
+                        pendingName = line.substring(commaIndex + 1).trim();
+                    } else {
+                        pendingName = line.replace(/#EXTINF[:-0-9\s]*/i, '').trim();
                     }
-                } 
-                // لو السطر بيبدأ بـ http، ده الرابط اللي هنربطه بالاسم اللي لقيناه فوق
-                else if (line.startsWith('http')) {
+                    continue;
+                }
+
+                // البحث عن رابط داخل السطر
+                const urlMatch = line.match(/(https?:\/\/[^\s"']+)/i);
+
+                if (urlMatch) {
+                    const url = urlMatch[1];
+                    
+                    // استخراج الكلام اللي جنب الرابط (لو موجود) ليكون هو اسم القناة
+                    let nameInLine = line.replace(url, '').trim();
+                    
+                    // تنظيف الاسم من أي فواصل زايدة
+                    nameInLine = nameInLine.replace(/^[-:|,]+|[-:|,]+$/g, '').trim();
+
+                    let finalName = pendingName;
+                    if (nameInLine.length > 0 && !nameInLine.startsWith('#')) {
+                        finalName = nameInLine;
+                    }
+
                     extractedChannels.push({
-                        name: currentChannelName,
-                        url: line
+                        name: finalName || "قناة غير معروفة",
+                        url: url
                     });
-                    // تصفير الاسم عشان لو الرابط اللي بعده ملوش اسم
-                    currentChannelName = "قناة غير معروفة"; 
+
+                    // تصفير الاسم عشان القناة اللي بعدها
+                    pendingName = "قناة غير معروفة";
+                } else {
+                    // لو السطر مفيهوش رابط ومفهوش EXTINF، نعتبره اسم القناة والرابط هيكون تحته
+                    if (!line.startsWith('#')) {
+                        pendingName = line;
+                    }
                 }
             }
 
             if (extractedChannels.length === 0) {
-                alert("لم يتم العثور على أي روابط صالحة!");
+                alert("لم يتم العثور على أي روابط صالحة! تأكد إن النص بيحتوي على روابط بتبدأ بـ http أو https");
                 return;
             }
 
@@ -277,7 +302,7 @@
                 });
 
             } else if (playerType === 'hls') {
-                // تشغيل بـ Hls.js الاحترافي (ممتاز وسريع جداً لروابط الـ m3u8)
+                // تشغيل بـ Hls.js
                 container.innerHTML = '<video id="hls-video" class="hls-player" controls autoplay></video>';
                 const video = document.getElementById('hls-video');
 
@@ -289,7 +314,7 @@
                         video.play();
                     });
                 } 
-                // دعم متصفحات أبل (سفاري) التي تدعم HLS مباشرة
+                // دعم متصفحات أبل
                 else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = channel.url;
                     video.addEventListener('loadedmetadata', function() {
