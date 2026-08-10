@@ -83,9 +83,6 @@
             justify-content: center; align-items: center;
         }
         #video-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        
-        /* مشغل HLS.js (HTML5 Video) */
-        video.hls-player { width: 100%; height: 100%; background: #000; outline: none; }
 
         /* --------------------------------------------------- */
         /* تعديلات JW Player */
@@ -112,11 +109,11 @@
     <div class="top-panel">
         <h2>أداة استخراج وتشغيل قنوات M3U8</h2>
         <div class="input-group">
-            <textarea id="m3uInput" placeholder="الصق محتوى ملف الـ M3U أو قائمة الروابط بأي صيغة هنا..."></textarea>
+            <textarea id="m3uInput" placeholder="الصق محتوى ملف الـ M3U أو أي قائمة روابط m3u8 بأي صيغة هنا وسيتم استخراجها فوراً..."></textarea>
             <div class="controls">
                 <select id="playerType">
-                    <option value="jw">JW Player (المفضل)</option>
-                    <option value="hls">HLS.js (احترافي وسريع للـ m3u8)</option>
+                    <option value="jw">JW Player (المفضل للـ M3U8)</option>
+                    <option value="hls">HLS.js (احترافي وسريع جداً)</option>
                 </select>
                 <button class="extract-btn" onclick="parseM3U()">استخراج القنوات ⚡</button>
             </div>
@@ -136,7 +133,7 @@
             </div>
             <div class="channel-list" id="channelList">
                 <div style="color: #666; text-align: center; margin-top: 20px; font-size: 14px;">
-                    القنوات ستظهر هنا بعد الاستخراج
+                    القنوات ستظهر هنا فور الاستخراج
                 </div>
             </div>
         </div>
@@ -147,78 +144,84 @@
         let currentHls = null;
         let currentJwPlayer = null;
 
-        // دالة تحليل واستخراج الروابط بذكاء
+        // دالة التحليل الذكية والشاملة لأي صيغة نصية
         function parseM3U() {
-            const rawText = document.getElementById('m3uInput').value.trim();
-            if (!rawText) {
-                alert("يرجى لصق الروابط أو الملف أولاً!");
+            const rawText = document.getElementById('m3uInput').value;
+            if (!rawText.trim()) {
+                alert("يرجى لصق الروابط أولاً!");
                 return;
             }
 
             extractedChannels = [];
-            const lines = rawText.split('\n');
-            let pendingName = "قناة غير معروفة";
+            // تقسيم النص إلى أسطر مع إزالة المسافات الفارغة المزعجة
+            const lines = rawText.replace(/\r/g, '').split('\n');
+            let tempName = "قناة غير معروفة";
 
             for (let i = 0; i < lines.length; i++) {
                 let line = lines[i].trim();
-                if (line === '') continue;
+                if (!line) continue;
 
-                // لو السطر بصيغة M3U القياسية
+                // التعامل مع صيغة M3U القياسية
                 if (line.toUpperCase().startsWith('#EXTINF')) {
-                    const commaIndex = line.lastIndexOf(',');
-                    if (commaIndex !== -1) {
-                        pendingName = line.substring(commaIndex + 1).trim();
-                    } else {
-                        pendingName = line.replace(/#EXTINF[:-0-9\s]*/i, '').trim();
-                    }
+                    const parts = line.split(',');
+                    tempName = parts.length > 1 ? parts.slice(1).join(',').trim() : line.replace(/#EXTINF[:-0-9\s]*/i, '').trim();
                     continue;
                 }
 
-                // البحث عن رابط داخل السطر
-                const urlMatch = line.match(/(https?:\/\/[^\s"']+)/i);
-
+                // البحث عن أي رابط بيبدأ بـ http/https
+                let urlMatch = line.match(/(https?:\/\/[^\s<>"]+)/i);
+                
                 if (urlMatch) {
-                    const url = urlMatch[1];
+                    let url = urlMatch[1];
                     
-                    // استخراج الكلام اللي جنب الرابط (لو موجود) ليكون هو اسم القناة
-                    let nameInLine = line.replace(url, '').trim();
+                    // عزل الرابط واستخراج أي نص بجانبه في نفس السطر ليكون اسم القناة
+                    let nameInline = line.replace(url, '').trim();
+                    nameInline = nameInline.replace(/^[-:;,|]+|[-:;,|]+$/g, '').trim(); // تنظيف الرموز الزائدة
                     
-                    // تنظيف الاسم من أي فواصل زايدة
-                    nameInLine = nameInLine.replace(/^[-:|,]+|[-:|,]+$/g, '').trim();
-
-                    let finalName = pendingName;
-                    if (nameInLine.length > 0 && !nameInLine.startsWith('#')) {
-                        finalName = nameInLine;
+                    let channelName = "قناة " + (extractedChannels.length + 1);
+                    
+                    if (nameInline) {
+                        channelName = nameInline;
+                    } else if (tempName && tempName !== "قناة غير معروفة") {
+                        channelName = tempName;
+                    } else if (i > 0) {
+                        // لو مفيش اسم في السطر ده، نشوف السطر اللي قبله لو كان نص عادي
+                        let prevLine = lines[i-1].trim();
+                        if (prevLine && !prevLine.startsWith('#') && !prevLine.match(/https?:\/\//)) {
+                            channelName = prevLine;
+                        }
                     }
 
-                    extractedChannels.push({
-                        name: finalName || "قناة غير معروفة",
-                        url: url
-                    });
+                    extractedChannels.push({ name: channelName, url: url });
+                    tempName = "قناة غير معروفة"; // تصفير الاسم للقناة التالية
+                } else if (!line.startsWith('#')) {
+                    // لو السطر مفيهوش رابط ولا هو كود برمجي، بنحفظه كاسم للقناة اللي هتيجي تحته
+                    tempName = line;
+                }
+            }
 
-                    // تصفير الاسم عشان القناة اللي بعدها
-                    pendingName = "قناة غير معروفة";
-                } else {
-                    // لو السطر مفيهوش رابط ومفهوش EXTINF، نعتبره اسم القناة والرابط هيكون تحته
-                    if (!line.startsWith('#')) {
-                        pendingName = line;
-                    }
+            // لو فشل في إيجاد روابط صريحة، بندور عشوائياً في النص كله
+            if (extractedChannels.length === 0) {
+                const fallbackUrls = rawText.match(/(https?:\/\/[^\s<>"]+\.m3u8[^\s<>"]*)/gi);
+                if (fallbackUrls) {
+                    fallbackUrls.forEach((u, idx) => extractedChannels.push({ name: `قناة ${idx + 1}`, url: u }));
                 }
             }
 
             if (extractedChannels.length === 0) {
-                alert("لم يتم العثور على أي روابط صالحة! تأكد إن النص بيحتوي على روابط بتبدأ بـ http أو https");
+                alert("لم يتم العثور على روابط M3U8 صالحة!");
                 return;
             }
 
+            // تصفير البحث وعرض القنوات فوراً
             document.getElementById('searchInput').value = '';
             renderChannels('');
             
-            // تشغيل أول قناة تلقائياً
-            if(extractedChannels.length > 0) playChannel(0);
+            // تشغيل أول قناة أوتوماتيكياً
+            playChannel(0);
         }
 
-        // دالة عرض القنوات في القائمة الجانبية
+        // عرض القنوات في القائمة
         function renderChannels(filterText) {
             const listContainer = document.getElementById("channelList");
             listContainer.innerHTML = "";
@@ -232,7 +235,7 @@
                     btn.className = "channel-btn";
                     btn.id = "btn-" + i;
                     
-                    btn.innerHTML = `<span>${channel.name}</span> <span style="font-size: 10px; color: #88c79c;">▶</span>`;
+                    btn.innerHTML = `<span>${channel.name}</span> <span style="font-size: 10px; color: #88c79c;">M3U8</span>`;
                     
                     btn.onclick = () => playChannel(i);
                     listContainer.appendChild(btn);
@@ -244,25 +247,24 @@
             }
         }
 
-        // فلترة القنوات للبحث
         function filterChannels() {
             const text = document.getElementById("searchInput").value;
             renderChannels(text);
         }
 
-        // دالة تشغيل القناة في المشغل المختار
+        // تشغيل القناة بناءً على البلاير المختار
         function playChannel(index) {
             const channel = extractedChannels[index];
             const playerType = document.getElementById('playerType').value;
             const container = document.getElementById('video-container');
 
-            // تفعيل الزر في القائمة
+            // تظليل القناة الفعالة
             const allBtns = document.querySelectorAll(".channel-btn");
             allBtns.forEach(b => b.classList.remove("active"));
             const activeBtn = document.getElementById("btn-" + index);
             if(activeBtn) activeBtn.classList.add("active");
 
-            // تنظيف أي مشغل سابق
+            // تنظيف البلاير السابق
             container.innerHTML = '';
             if (currentHls) {
                 currentHls.destroy();
@@ -270,11 +272,11 @@
             }
 
             if (playerType === 'jw') {
-                // تشغيل بـ JW Player
                 container.innerHTML = '<div id="jw-player"></div>';
                 
                 currentJwPlayer = jwplayer("jw-player").setup({
                     file: channel.url,
+                    type: "hls", // إجبار JW Player على التعامل مع الرابط كـ HLS m3u8
                     width: "100%",
                     height: "100%",
                     autostart: true,
@@ -302,19 +304,20 @@
                 });
 
             } else if (playerType === 'hls') {
-                // تشغيل بـ Hls.js
-                container.innerHTML = '<video id="hls-video" class="hls-player" controls autoplay></video>';
+                container.innerHTML = '<video id="hls-video" style="width: 100%; height: 100%; background: #000; outline: none;" controls autoplay></video>';
                 const video = document.getElementById('hls-video');
 
                 if (Hls.isSupported()) {
-                    currentHls = new Hls();
+                    currentHls = new Hls({
+                        maxMaxBufferLength: 30, // تحسين البث المباشر
+                        liveSyncDurationCount: 3
+                    });
                     currentHls.loadSource(channel.url);
                     currentHls.attachMedia(video);
                     currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
                         video.play();
                     });
                 } 
-                // دعم متصفحات أبل
                 else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = channel.url;
                     video.addEventListener('loadedmetadata', function() {
