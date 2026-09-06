@@ -16,92 +16,207 @@
             --text: #f8fafc;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 10px; }
         
-        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid rgba(0, 242, 254, 0.2); }
-        .card-title { font-size: 1.2rem; margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text); 
+            height: 100vh; 
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* الهيدر العلوي وزر الإيقاف الشامل */
+        header {
+            position: relative;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.1);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+
+        .global-stop-btn {
+            position: absolute;
+            left: 20px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
+        }
+        .global-stop-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .dashboard-container { 
+            display: flex; 
+            flex: 1; 
+            padding: 20px; 
+            gap: 20px; 
+            overflow: hidden;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .right-panel {
+            flex: 4;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            padding-left: 5px;
+        }
+
+        .left-panel {
+            flex: 6;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 20px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
+            border: 1px solid rgba(0, 242, 254, 0.2); 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .left-panel .card { flex: 1; overflow: hidden; }
+
+        .card-title { font-size: 1.2rem; margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; font-weight: 900;}
         
         input[type="text"], textarea {
             width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155;
             background: #0b1120; color: white; margin-bottom: 15px; font-size: 1rem; text-align: left; direction: ltr;
         }
-        textarea { height: 150px; resize: vertical; }
-        input:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        textarea { height: 180px; resize: none; flex-shrink: 0; }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 5px rgba(0, 242, 254, 0.3); }
 
         .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-        button {
+        button.action-btn {
             padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 1rem;
+            transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 1rem; flex: 1; justify-content: center;
         }
         .btn-primary { background: var(--primary); color: #000; }
-        .btn-primary:hover { background: #00c3cc; }
+        .btn-primary:hover { background: #00c3cc; transform: translateY(-2px); }
         .btn-danger { background: #ef4444; color: white; }
-        .btn-danger:hover { background: #dc2626; }
+        .btn-danger:hover { background: #dc2626; transform: translateY(-2px); }
         .btn-secondary { background: #334155; color: white; }
-        .btn-secondary:hover { background: #475569; }
+        .btn-secondary:hover { background: #475569; transform: translateY(-2px); }
 
-        .player-status { margin-top: 15px; padding: 10px; border-radius: 8px; background: #000; display: flex; justify-content: space-between; align-items: center; }
+        .player-status { margin-top: 15px; padding: 12px; border-radius: 8px; background: #000; display: flex; justify-content: space-between; align-items: center; }
         .status-text { color: #94a3b8; font-size: 0.9rem; }
         .status-playing { color: #22c55e; font-weight: bold; }
         .status-error { color: #ef4444; font-weight: bold; }
 
-        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .count-badge { background: var(--primary); color: #000; padding: 3px 10px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
+        .count-badge { background: var(--primary); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: bold; }
         
-        .station-item {
-            background: #0f172a; border: 1px solid #334155; padding: 15px; border-radius: 8px;
-            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+        #resultsList {
+            flex: 1;
+            overflow-y: auto;
+            padding-left: 5px;
         }
-        .station-info { flex: 1; min-width: 250px; }
-        .station-name { font-weight: bold; margin-bottom: 5px; color: #e2e8f0; }
+        #resultsList::-webkit-scrollbar, .right-panel::-webkit-scrollbar { width: 6px; }
+        #resultsList::-webkit-scrollbar-thumb, .right-panel::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+
+        .station-item {
+            background: #0b1120; border: 1px solid #334155; padding: 15px; border-radius: 8px;
+            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px;
+            transition: border 0.2s;
+        }
+        .station-item:hover { border-color: var(--primary); }
+        .station-info { flex: 1; min-width: 0; }
+        .station-name { font-weight: bold; margin-bottom: 5px; color: #e2e8f0; font-size: 1.1rem; }
         .station-url { font-size: 0.85rem; color: #64748b; word-break: break-all; direction: ltr; text-align: left; }
-        .station-actions { display: flex; gap: 10px; }
+        .station-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .station-actions button { padding: 8px 12px; font-size: 0.9rem; flex: none; }
 
         audio { width: 100%; margin-top: 15px; outline: none; border-radius: 8px; }
+
+        .empty-state { text-align: center; color: #64748b; margin-top: 50px; font-size: 1.2rem; }
+
+        @media (max-width: 900px) {
+            body { overflow: auto; }
+            .dashboard-container { flex-direction: column; overflow: visible; height: auto; }
+            .right-panel, .left-panel { flex: none; overflow: visible; }
+            #resultsList { max-height: 500px; }
+            .global-stop-btn { width: 35px; height: 35px; font-size: 1rem; left: 10px; }
+            h1 { font-size: 1.4rem; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1><i class="fas fa-satellite-dish"></i> أداة اختبار واستخراج الإذاعات</h1>
+    <header>
+        <h1><i class="fas fa-satellite-dish"></i> مختبر ومستخرج الإذاعات</h1>
+        <button class="global-stop-btn" onclick="stopPlayer()" title="إيقاف تام للجميع">
+            <i class="fas fa-power-off"></i>
+        </button>
+    </header>
 
-    <!-- قسم الاختبار السريع -->
-    <div class="card">
-        <div class="card-title"><i class="fas fa-play-circle"></i> اختبار رابط سريع</div>
-        <input type="text" id="quickUrl" placeholder="الصق رابط الإذاعة هنا (مثال: http://stream.zeno.fm/...)">
-        <div class="btn-group">
-            <button class="btn-primary" onclick="testQuickUrl()"><i class="fas fa-play"></i> تشغيل</button>
-            <button class="btn-danger" onclick="stopPlayer()"><i class="fas fa-stop"></i> إيقاف</button>
-        </div>
+    <div class="dashboard-container">
         
-        <div class="player-status">
-            <span id="playerStatus" class="status-text">متوقف</span>
-            <span id="currentTestUrl" style="font-size: 0.8rem; color: #64748b; direction: ltr;"></span>
-        </div>
-        <audio id="audioPlayer" controls></audio>
-    </div>
+        <div class="right-panel">
+            
+            <div class="card">
+                <div class="card-title"><i class="fas fa-code"></i> استخراج الروابط من نص أو M3U</div>
+                <textarea id="extractInput" placeholder="الصق كود M3U بالكامل هنا، أو الصق أي نص عشوائي يحتوي على روابط ليتم استخراجها تلقائياً..."></textarea>
+                <div class="btn-group">
+                    <button class="action-btn btn-primary" onclick="extractStations()"><i class="fas fa-search"></i> استخراج الإذاعات</button>
+                    <button class="action-btn btn-secondary" onclick="document.getElementById('extractInput').value=''"><i class="fas fa-trash"></i> مسح النص</button>
+                </div>
+            </div>
 
-    <!-- قسم الاستخراج -->
-    <div class="card">
-        <div class="card-title"><i class="fas fa-code"></i> استخراج الروابط من نص أو M3U</div>
-        <textarea id="extractInput" placeholder="الصق كود M3U بالكامل هنا، أو الصق أي نص يحتوي على روابط..."></textarea>
-        <div class="btn-group">
-            <button class="btn-primary" onclick="extractStations()"><i class="fas fa-search"></i> استخراج الإذاعات</button>
-            <button class="btn-secondary" onclick="document.getElementById('extractInput').value=''"><i class="fas fa-trash"></i> مسح النص</button>
-        </div>
-    </div>
+            <div class="card">
+                <div class="card-title"><i class="fas fa-play-circle"></i> اختبار رابط سريع والبلاير</div>
+                <input type="text" id="quickUrl" placeholder="الصق رابط الإذاعة هنا (مثال: http://stream.zeno.fm/...)">
+                <div class="btn-group">
+                    <button class="action-btn btn-primary" onclick="testQuickUrl()"><i class="fas fa-play"></i> تشغيل بالمشغل</button>
+                    <button class="action-btn btn-danger" onclick="stopPlayer()"><i class="fas fa-stop"></i> إيقاف</button>
+                </div>
+                
+                <div class="player-status">
+                    <span id="playerStatus" class="status-text">متوقف</span>
+                    <span id="currentTestUrl" style="font-size: 0.8rem; color: #64748b; direction: ltr; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
+                </div>
+                <audio id="audioPlayer" controls></audio>
+            </div>
 
-    <!-- قسم النتائج -->
-    <div class="card" id="resultsCard" style="display: none;">
-        <div class="results-header">
-            <div class="card-title" style="margin:0;"><i class="fas fa-list"></i> النتائج</div>
-            <div class="count-badge">العدد: <span id="stationCount">0</span></div>
         </div>
-        <div id="resultsList"></div>
+
+        <div class="left-panel">
+            <div class="card">
+                <div class="results-header">
+                    <div class="card-title" style="margin:0;"><i class="fas fa-list"></i> الإذاعات المستخرجة</div>
+                    <div class="count-badge">العدد: <span id="stationCount">0</span></div>
+                </div>
+                
+                <div id="resultsList">
+                    <div class="empty-state">لم يتم استخراج أي إذاعات بعد.<br>الصق النص في المربع الأيمن واضغط "استخراج".</div>
+                </div>
+            </div>
+        </div>
+
     </div>
-</div>
 
 <script>
     const audioPlayer = document.getElementById('audioPlayer');
@@ -109,7 +224,6 @@
     const currentTestUrl = document.getElementById('currentTestUrl');
     let hlsInstance = null;
 
-    // مشغل الراديو الذكي
     function playStream(url) {
         stopPlayer();
         currentTestUrl.textContent = url;
@@ -157,11 +271,9 @@
         const url = document.getElementById('quickUrl').value.trim();
         if (url) {
             playStream(url);
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
-    // خوارزمية الاستخراج
     function extractStations() {
         const text = document.getElementById('extractInput').value;
         const lines = text.split('\n');
@@ -172,7 +284,6 @@
             const line = lines[i].trim();
             if (!line) continue;
 
-            // محاولة التقاط الاسم من صيغة M3U
             if (line.startsWith('#EXTINF')) {
                 const parts = line.split(',');
                 if (parts.length > 1) {
@@ -181,16 +292,14 @@
                     tempName = 'إذاعة غير معروفة';
                 }
             } 
-            // التقاط أي رابط http أو https
             else if (line.startsWith('http://') || line.startsWith('https://')) {
-                let finalUrl = line.split('#')[0].trim(); // تنظيف الرابط
-                const name = tempName || `إذاعة مستخرجة ${stations.length + 1}`;
+                let finalUrl = line.split('#')[0].trim(); 
+                const name = tempName || `رابط مستخرج ${stations.length + 1}`;
                 stations.push({ name: name, url: finalUrl });
                 tempName = ''; 
             }
         }
 
-        // إذا لم يكن النص بصيغة M3U، نبحث عن الروابط العشوائية داخل النص
         if (stations.length === 0) {
             const urlRegex = /(https?:\/\/[^\s]+)/g;
             let match;
@@ -203,7 +312,6 @@
     }
 
     function renderResults(stations) {
-        const resultsCard = document.getElementById('resultsCard');
         const resultsList = document.getElementById('resultsList');
         const stationCount = document.getElementById('stationCount');
 
@@ -211,12 +319,9 @@
         stationCount.textContent = stations.length;
 
         if (stations.length === 0) {
-            resultsCard.style.display = 'block';
-            resultsList.innerHTML = '<p style="text-align:center; color:#ef4444;">لم يتم العثور على أي روابط صالحة.</p>';
+            resultsList.innerHTML = '<div class="empty-state" style="color:#ef4444;">لم يتم العثور على أي روابط صالحة. تأكد من النص المدخل.</div>';
             return;
         }
-
-        resultsCard.style.display = 'block';
 
         stations.forEach(station => {
             const item = document.createElement('div');
@@ -230,9 +335,9 @@
                     <div class="station-url">${station.url}</div>
                 </div>
                 <div class="station-actions">
-                    <button class="btn-primary" onclick="testExtracted('${cleanUrl}')" title="تجربة"><i class="fas fa-play"></i></button>
-                    <button class="btn-secondary" onclick="copyFormat('${station.name}', '${cleanUrl}')" title="نسخ كود الإضافة"><i class="fas fa-copy"></i> كود</button>
-                    <button class="btn-secondary" onclick="copyUrl('${cleanUrl}')" title="نسخ الرابط فقط"><i class="fas fa-link"></i></button>
+                    <button class="action-btn btn-primary" onclick="testExtracted('${cleanUrl}')" title="تشغيل الرابط"><i class="fas fa-play"></i></button>
+                    <button class="action-btn btn-secondary" onclick="copyFormat('${station.name.replace(/'/g, "\\'")}', '${cleanUrl}')" title="نسخ كود الإضافة"><i class="fas fa-code"></i></button>
+                    <button class="action-btn btn-secondary" onclick="copyUrl('${cleanUrl}')" title="نسخ الرابط فقط"><i class="fas fa-link"></i></button>
                 </div>
             `;
             resultsList.appendChild(item);
