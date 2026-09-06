@@ -26,7 +26,7 @@
             flex-direction: column;
         }
 
-        /* الهيدر العلوي وزر الإيقاف الشامل */
+        /* الهيدر العلوي وأزرار التحكم الشاملة */
         header {
             position: relative;
             text-align: center;
@@ -40,10 +40,14 @@
         
         h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
 
-        .global-stop-btn {
+        .header-actions {
             position: absolute;
             left: 20px;
-            background: #ef4444;
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn {
             color: white;
             border: none;
             border-radius: 50%;
@@ -55,35 +59,45 @@
             font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.2s;
+        }
+
+        .global-stop-btn {
+            background: #ef4444;
             box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
         }
-        .global-stop-btn:hover {
-            background: #dc2626;
-            transform: scale(1.1);
+        .global-stop-btn:hover { background: #dc2626; transform: scale(1.1); }
+
+        .copy-all-btn {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 4px 10px rgba(0, 242, 254, 0.4);
         }
+        .copy-all-btn:hover { background: #00c3cc; transform: scale(1.1); }
 
         .dashboard-container { 
             display: flex; 
             flex: 1; 
             padding: 20px; 
-            gap: 20px; 
+            gap: 15px; 
             overflow: hidden;
             max-width: 1600px;
             margin: 0 auto;
             width: 100%;
         }
 
+        /* الجانب الأيمن (توسيع لتقليل قائمة النتائج) */
         .right-panel {
-            flex: 4;
+            flex: 6.5;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 15px;
             overflow-y: auto;
             padding-left: 5px;
         }
 
+        /* الجانب الأيسر (النتائج أصبحت أضيق) */
         .left-panel {
-            flex: 6;
+            flex: 3.5;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -91,7 +105,7 @@
 
         .card { 
             background: var(--card-bg); 
-            padding: 20px; 
+            padding: 15px; 
             border-radius: 12px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
             border: 1px solid rgba(0, 242, 254, 0.2); 
@@ -99,21 +113,21 @@
             flex-direction: column;
         }
 
-        .left-panel .card { flex: 1; overflow: hidden; }
+        .left-panel .card { flex: 1; overflow: hidden; padding: 15px 10px; }
 
-        .card-title { font-size: 1.2rem; margin-bottom: 15px; color: var(--primary); display: flex; align-items: center; gap: 10px; font-weight: 900;}
+        .card-title { font-size: 1.1rem; margin-bottom: 12px; color: var(--primary); display: flex; align-items: center; gap: 8px; font-weight: 900;}
         
         input[type="text"], textarea {
-            width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #334155;
+            width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #334155;
             background: #0b1120; color: white; font-size: 1rem; text-align: left; direction: ltr;
         }
-        textarea { height: 180px; resize: none; flex-shrink: 0; margin-bottom: 15px; }
+        textarea { height: 180px; resize: none; flex-shrink: 0; margin-bottom: 12px; }
         input:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 5px rgba(0, 242, 254, 0.3); }
 
-        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
         button.action-btn {
-            padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
-            transition: all 0.2s; display: flex; align-items: center; gap: 8px; font-size: 1rem; flex: 1; justify-content: center;
+            padding: 8px 15px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px; font-size: 0.95rem; flex: 1; justify-content: center;
         }
         .btn-primary { background: var(--primary); color: #000; }
         .btn-primary:hover { background: #00c3cc; transform: translateY(-2px); }
@@ -122,46 +136,56 @@
         .btn-secondary { background: #334155; color: white; }
         .btn-secondary:hover { background: #475569; transform: translateY(-2px); }
 
-        .player-status { padding: 12px; border-radius: 8px; background: #000; display: flex; justify-content: space-between; align-items: center; }
+        .player-status { padding: 10px; border-radius: 8px; background: #000; display: flex; justify-content: space-between; align-items: center; margin: 10px 0; }
         .status-text { color: #94a3b8; font-size: 0.9rem; }
         .status-playing { color: #22c55e; font-weight: bold; }
         .status-error { color: #ef4444; font-weight: bold; }
 
-        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #334155; }
-        .count-badge { background: var(--primary); color: #000; padding: 4px 12px; border-radius: 20px; font-size: 0.95rem; font-weight: bold; }
+        .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #334155; }
+        .count-badge { background: var(--primary); color: #000; padding: 3px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; }
         
         #resultsList {
             flex: 1;
             overflow-y: auto;
-            padding-left: 5px;
+            padding-right: 5px;
         }
-        #resultsList::-webkit-scrollbar, .right-panel::-webkit-scrollbar { width: 6px; }
+        #resultsList::-webkit-scrollbar, .right-panel::-webkit-scrollbar { width: 5px; }
         #resultsList::-webkit-scrollbar-thumb, .right-panel::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
 
         .station-item {
-            background: #0b1120; border: 1px solid #334155; padding: 10px 15px; border-radius: 8px;
-            margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 15px;
-            transition: border 0.2s;
+            background: #0b1120; border: 1px solid #334155; padding: 10px; border-radius: 6px;
+            margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; gap: 8px;
+            transition: all 0.2s;
         }
         .station-item:hover { border-color: var(--primary); }
         
+        /* تلوين الإذاعة الشغالة */
+        .station-item.playing {
+            border-color: var(--primary);
+            background: rgba(0, 242, 254, 0.15);
+        }
+        .station-item.playing .station-name {
+            color: var(--primary);
+        }
+
         .station-info { flex: 1; min-width: 0; cursor: pointer; display: flex; align-items: center; transition: color 0.2s; }
-        .station-name { font-weight: bold; color: #e2e8f0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; margin: 0; }
+        .station-name { font-weight: bold; color: #e2e8f0; font-size: 1rem; display: flex; align-items: center; gap: 8px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .station-info:hover .station-name { color: var(--primary); }
         
-        .station-actions { display: flex; gap: 8px; flex-shrink: 0; }
-        .station-actions button { padding: 8px 12px; font-size: 0.9rem; flex: none; }
+        .station-actions { display: flex; gap: 5px; flex-shrink: 0; }
+        .station-actions button { padding: 6px 10px; font-size: 0.85rem; flex: none; border-radius: 6px; }
 
         audio { width: 100%; outline: none; border-radius: 8px; }
 
-        .empty-state { text-align: center; color: #64748b; margin-top: 50px; font-size: 1.2rem; }
+        .empty-state { text-align: center; color: #64748b; margin-top: 40px; font-size: 1.1rem; }
 
         @media (max-width: 900px) {
             body { overflow: auto; }
             .dashboard-container { flex-direction: column; overflow: visible; height: auto; }
             .right-panel, .left-panel { flex: none; overflow: visible; }
             #resultsList { max-height: 500px; }
-            .global-stop-btn { width: 35px; height: 35px; font-size: 1rem; left: 10px; }
+            .header-actions { left: 10px; }
+            .header-btn { width: 35px; height: 35px; font-size: 1rem; }
             h1 { font-size: 1.4rem; }
         }
     </style>
@@ -170,16 +194,23 @@
 
     <header>
         <h1><i class="fas fa-satellite-dish"></i> مختبر ومستخرج الإذاعات</h1>
-        <button class="global-stop-btn" onclick="globalStopAndClear()" title="إيقاف تام ومسح كل شيء">
-            <i class="fas fa-power-off"></i>
-        </button>
+        <div class="header-actions">
+            <!-- زر النسخ للكل على اليمين بالنسبة لزر الإيقاف -->
+            <button class="header-btn copy-all-btn" onclick="copyAllFormats()" title="نسخ أكواد جميع الإذاعات المستخرجة">
+                <i class="fas fa-copy"></i>
+            </button>
+            <!-- زر الإيقاف العام -->
+            <button class="header-btn global-stop-btn" onclick="globalStopAndClear()" title="إيقاف تام ومسح كل شيء">
+                <i class="fas fa-power-off"></i>
+            </button>
+        </div>
     </header>
 
     <div class="dashboard-container">
         
         <div class="right-panel">
             
-            <div class="card" style="gap: 15px;">
+            <div class="card" style="gap: 10px;">
                 <div class="card-title"><i class="fas fa-play-circle"></i> المشغل واختبار الروابط</div>
                 
                 <audio id="audioPlayer" controls></audio>
@@ -189,12 +220,12 @@
                     <span id="currentTestUrl" style="font-size: 0.8rem; color: #64748b; direction: ltr; max-width: 60%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></span>
                 </div>
                 
+                <input type="text" id="quickUrl" placeholder="الصق رابط الإذاعة هنا (مثال: http://stream.zeno.fm/...)">
+
                 <div class="btn-group">
                     <button class="action-btn btn-primary" onclick="testQuickUrl()"><i class="fas fa-play"></i> تشغيل بالمشغل</button>
                     <button class="action-btn btn-danger" onclick="stopPlayer()"><i class="fas fa-stop"></i> إيقاف المشغل فقط</button>
                 </div>
-                
-                <input type="text" id="quickUrl" placeholder="الصق رابط الإذاعة هنا (مثال: http://stream.zeno.fm/...)">
             </div>
 
             <div class="card">
@@ -228,9 +259,10 @@
     const playerStatus = document.getElementById('playerStatus');
     const currentTestUrl = document.getElementById('currentTestUrl');
     let hlsInstance = null;
+    let currentExtractedStations = []; // لتخزين الإذاعات لاستخدامها في زر النسخ الشامل
 
     function playStream(url) {
-        stopPlayer();
+        stopPlayer(); // يوقف التشغيل ويمسح التمييز
         currentTestUrl.textContent = url;
         playerStatus.textContent = "جاري الاتصال...";
         playerStatus.className = "status-text text-warning";
@@ -251,6 +283,12 @@
         }
     }
 
+    function removePlayingHighlight() {
+        document.querySelectorAll('.station-item').forEach(item => {
+            item.classList.remove('playing');
+        });
+    }
+
     function stopPlayer() {
         if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
         audioPlayer.pause();
@@ -259,16 +297,16 @@
         playerStatus.textContent = "متوقف";
         playerStatus.className = "status-text";
         currentTestUrl.textContent = ""; 
+        removePlayingHighlight();
     }
 
     function globalStopAndClear() {
         stopPlayer();
-
         document.getElementById('extractInput').value = '';
         document.getElementById('quickUrl').value = '';
-
         document.getElementById('resultsList').innerHTML = '<div class="empty-state">لم يتم استخراج أي إذاعات بعد.<br>الصق النص في المربع الأيمن واضغط "استخراج".</div>';
         document.getElementById('stationCount').textContent = '0';
+        currentExtractedStations = [];
     }
 
     audioPlayer.addEventListener('playing', () => {
@@ -324,6 +362,7 @@
             }
         }
 
+        currentExtractedStations = stations; // حفظ الإذاعات عالمياً
         renderResults(stations);
     }
 
@@ -339,14 +378,15 @@
             return;
         }
 
-        stations.forEach(station => {
+        stations.forEach((station, index) => {
             const item = document.createElement('div');
             item.className = 'station-item';
+            item.id = 'station-' + index;
             
             const cleanUrl = station.url.replace(/"/g, '&quot;');
             
             item.innerHTML = `
-                <div class="station-info" onclick="testExtracted('${cleanUrl}')" title="تشغيل الرابط">
+                <div class="station-info" onclick="testExtracted('${cleanUrl}', ${index})" title="تشغيل الرابط">
                     <div class="station-name"><i class="fas fa-play-circle"></i> ${station.name}</div>
                 </div>
                 <div class="station-actions">
@@ -358,9 +398,14 @@
         });
     }
 
-    function testExtracted(url) {
+    function testExtracted(url, index) {
         document.getElementById('quickUrl').value = url;
         testQuickUrl();
+        
+        // إزالة التمييز عن الكل وإضافته للإذاعة المضغوط عليها
+        removePlayingHighlight();
+        const activeItem = document.getElementById('station-' + index);
+        if(activeItem) activeItem.classList.add('playing');
     }
 
     function copyFormat(name, url) {
@@ -373,6 +418,21 @@
     function copyUrl(url) {
         navigator.clipboard.writeText(url).then(() => {
             alert("تم نسخ الرابط بنجاح!");
+        });
+    }
+
+    function copyAllFormats() {
+        if (currentExtractedStations.length === 0) {
+            alert("لا يوجد أي إذاعات مستخرجة لنسخها!");
+            return;
+        }
+        // تحويل جميع الإذاعات إلى الكود المطلوب وتجميعها
+        const allCodes = currentExtractedStations.map(station => 
+            `{ name: "${station.name.replace(/"/g, '\\"')}", url: "${station.url}" },`
+        ).join('\n');
+
+        navigator.clipboard.writeText(allCodes).then(() => {
+            alert(`تم نسخ أكواد ${currentExtractedStations.length} إذاعة بنجاح!`);
         });
     }
 </script>
