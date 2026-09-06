@@ -26,7 +26,6 @@
             flex-direction: column;
         }
 
-        /* الهيدر العلوي وزر الإيقاف الشامل */
         header {
             position: relative;
             text-align: center;
@@ -168,7 +167,7 @@
 
     <header>
         <h1><i class="fas fa-satellite-dish"></i> مختبر ومستخرج الإذاعات</h1>
-        <button class="global-stop-btn" onclick="stopPlayer()" title="إيقاف تام للجميع">
+        <button class="global-stop-btn" onclick="globalStopAndClear()" title="إيقاف تام ومسح كل شيء">
             <i class="fas fa-power-off"></i>
         </button>
     </header>
@@ -253,6 +252,17 @@
         audioPlayer.load();
         playerStatus.textContent = "متوقف";
         playerStatus.className = "status-text";
+        currentTestUrl.textContent = ""; 
+    }
+
+    function globalStopAndClear() {
+        stopPlayer();
+
+        document.getElementById('extractInput').value = '';
+        document.getElementById('quickUrl').value = '';
+
+        document.getElementById('resultsList').innerHTML = '<div class="empty-state">لم يتم استخراج أي إذاعات بعد.<br>الصق النص في المربع الأيمن واضغط "استخراج".</div>';
+        document.getElementById('stationCount').textContent = '0';
     }
 
     audioPlayer.addEventListener('playing', () => {
