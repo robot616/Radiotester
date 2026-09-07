@@ -85,7 +85,6 @@
             width: 100%;
         }
 
-        /* الجانب الأيمن (توسيع لتقليل قائمة النتائج) */
         .right-panel {
             flex: 6.5;
             display: flex;
@@ -95,7 +94,6 @@
             padding-left: 5px;
         }
 
-        /* الجانب الأيسر (النتائج أصبحت أضيق) */
         .left-panel {
             flex: 3.5;
             display: flex;
@@ -159,7 +157,6 @@
         }
         .station-item:hover { border-color: var(--primary); }
         
-        /* تلوين الإذاعة الشغالة */
         .station-item.playing {
             border-color: var(--primary);
             background: rgba(0, 242, 254, 0.15);
@@ -195,11 +192,9 @@
     <header>
         <h1><i class="fas fa-satellite-dish"></i> مختبر ومستخرج الإذاعات</h1>
         <div class="header-actions">
-            <!-- زر النسخ للكل على اليمين بالنسبة لزر الإيقاف -->
             <button class="header-btn copy-all-btn" onclick="copyAllFormats()" title="نسخ أكواد جميع الإذاعات المستخرجة">
                 <i class="fas fa-copy"></i>
             </button>
-            <!-- زر الإيقاف العام -->
             <button class="header-btn global-stop-btn" onclick="globalStopAndClear()" title="إيقاف تام ومسح كل شيء">
                 <i class="fas fa-power-off"></i>
             </button>
@@ -259,10 +254,10 @@
     const playerStatus = document.getElementById('playerStatus');
     const currentTestUrl = document.getElementById('currentTestUrl');
     let hlsInstance = null;
-    let currentExtractedStations = []; // لتخزين الإذاعات لاستخدامها في زر النسخ الشامل
+    let currentExtractedStations = [];
 
     function playStream(url) {
-        stopPlayer(); // يوقف التشغيل ويمسح التمييز
+        stopPlayer();
         currentTestUrl.textContent = url;
         playerStatus.textContent = "جاري الاتصال...";
         playerStatus.className = "status-text text-warning";
@@ -335,9 +330,10 @@
         let tempName = '';
 
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+            let line = lines[i].trim();
             if (!line) continue;
 
+            // 1. استخراج من صيغة M3U
             if (line.startsWith('#EXTINF')) {
                 const parts = line.split(',');
                 if (parts.length > 1) {
@@ -346,23 +342,40 @@
                     tempName = 'إذاعة غير معروفة';
                 }
             } 
+            // 2. استخراج من صيغة الكود البرمجي { name: "...", url: "..." }
+            else if (line.includes('url:') && (line.includes('name:') || line.includes('{'))) {
+                const nameMatch = line.match(/name:\s*["']([^"']+)["']/i);
+                const urlMatch = line.match(/url:\s*["']([^"']+)["']/i);
+                
+                if (urlMatch) {
+                    stations.push({ 
+                        name: nameMatch ? nameMatch[1].trim() : `رابط مستخرج ${stations.length + 1}`, 
+                        url: urlMatch[1].trim() 
+                    });
+                    tempName = '';
+                }
+            }
+            // 3. استخراج الروابط المباشرة (مع تنظيف أي زوائد)
             else if (line.startsWith('http://') || line.startsWith('https://')) {
-                let finalUrl = line.split('#')[0].trim(); 
+                // إزالة أي علامات تنصيص أو فواصل في نهاية الرابط
+                let finalUrl = line.split('#')[0].replace(/["',}]+$/, '').trim(); 
                 const name = tempName || `رابط مستخرج ${stations.length + 1}`;
                 stations.push({ name: name, url: finalUrl });
                 tempName = ''; 
             }
         }
 
+        // 4. الفلتر الشامل للبحث في أي نص عشوائي (يتجاهل علامات التنصيص)
         if (stations.length === 0) {
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            const urlRegex = /(https?:\/\/[^\s"'<>},]+)/g;
             let match;
             while ((match = urlRegex.exec(text)) !== null) {
-                stations.push({ name: `رابط مستخرج ${stations.length + 1}`, url: match[1] });
+                let cleanUrl = match[1].replace(/["',}]+$/, '').trim();
+                stations.push({ name: `رابط مستخرج ${stations.length + 1}`, url: cleanUrl });
             }
         }
 
-        currentExtractedStations = stations; // حفظ الإذاعات عالمياً
+        currentExtractedStations = stations; 
         renderResults(stations);
     }
 
@@ -402,7 +415,6 @@
         document.getElementById('quickUrl').value = url;
         testQuickUrl();
         
-        // إزالة التمييز عن الكل وإضافته للإذاعة المضغوط عليها
         removePlayingHighlight();
         const activeItem = document.getElementById('station-' + index);
         if(activeItem) activeItem.classList.add('playing');
@@ -426,7 +438,7 @@
             alert("لا يوجد أي إذاعات مستخرجة لنسخها!");
             return;
         }
-        // تحويل جميع الإذاعات إلى الكود المطلوب وتجميعها
+        
         const allCodes = currentExtractedStations.map(station => 
             `{ name: "${station.name.replace(/"/g, '\\"')}", url: "${station.url}" },`
         ).join('\n');
